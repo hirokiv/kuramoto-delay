@@ -4,7 +4,7 @@ import time
 
 def main():
     from src.phase_diagram import generate_phase_diagram
-    from src.plot import plot_phase_diagram
+    from src.plot import plot_phase_diagram, plot_timeseries
 
     os.makedirs("output", exist_ok=True)
 
@@ -18,6 +18,11 @@ def main():
 
     save_path = os.path.join("output", "phase_diagram.png")
     plot_phase_diagram(tau_vals, eps_vals, phase_map, save_path=save_path)
+
+    print("Generating time series plots...")
+    ts_path = os.path.join("output", "timeseries.png")
+    plot_timeseries(save_path=ts_path)
+
     print("Done.")
 
 

@@ -4,6 +4,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
+from src.model import simulate_delayed_kuramoto
+
 
 def plot_phase_diagram(tau_vals, eps_vals, phase_map, save_path=None):
     """
@@ -35,6 +37,56 @@ def plot_phase_diagram(tau_vals, eps_vals, phase_map, save_path=None):
     ax.legend(loc="upper right")
 
     ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+
+    if save_path:
+        fig.savefig(save_path, dpi=150)
+        print(f"Saved to {save_path}")
+
+    plt.close(fig)
+
+
+def plot_timeseries(save_path=None):
+    """
+    Plot R(t) time series for three representative (tau, eps) points:
+    Synchronized, Incoherent, and Bistable.
+
+    Each subplot shows two curves (random start vs sync start)
+    with a horizontal dashed line at R=0.5.
+    """
+    N = 100
+    omega_0 = np.pi / 2
+    dt = 0.05
+    t_max = 50.0
+
+    cases = [
+        {"title": "Synchronized", "tau": 0.5, "eps": 0.3},
+        {"title": "Incoherent", "tau": 1.8, "eps": 0.3},
+        {"title": "Bistable", "tau": 2.5, "eps": 0.3},
+    ]
+
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4), sharey=True)
+
+    for ax, case in zip(axes, cases):
+        _, t_rand, R_rand = simulate_delayed_kuramoto(
+            N, omega_0, case["eps"], case["tau"], dt, t_max,
+            init_state="random", return_timeseries=True,
+        )
+        _, t_sync, R_sync = simulate_delayed_kuramoto(
+            N, omega_0, case["eps"], case["tau"], dt, t_max,
+            init_state="sync", return_timeseries=True,
+        )
+
+        ax.plot(t_rand, R_rand, label="Random start", color="tab:orange")
+        ax.plot(t_sync, R_sync, label="Sync start", color="tab:blue")
+        ax.axhline(0.5, color="gray", linestyle="--", linewidth=1)
+        ax.set_title(rf"{case['title']} ($\tau$={case['tau']}, $\epsilon$={case['eps']})")
+        ax.set_xlabel("Time")
+        ax.set_ylim(-0.05, 1.05)
+
+    axes[0].set_ylabel("Order parameter R(t)")
+    axes[0].legend(loc="center right")
+
     fig.tight_layout()
 
     if save_path:

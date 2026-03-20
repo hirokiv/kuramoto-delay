@@ -1,11 +1,11 @@
 import numpy as np
 
 
-def simulate_delayed_kuramoto(N, omega_0, epsilon, tau, dt, t_max, init_state="random"):
+def simulate_delayed_kuramoto(N, omega_0, epsilon, tau, dt, t_max, init_state="random", return_timeseries=False):
     """
     Simulate the delayed Kuramoto model using Euler method with a history buffer.
 
-    Returns the final order parameter R.
+    Returns the final order parameter R, or (R, t_array, R_array) if return_timeseries=True.
     """
     steps = int(t_max / dt)
     delay_steps = int(tau / dt)
@@ -19,6 +19,10 @@ def simulate_delayed_kuramoto(N, omega_0, epsilon, tau, dt, t_max, init_state="r
         history[:] = np.random.uniform(0, 2 * np.pi, N)  # R ≈ 0
     elif init_state == "sync":
         history[:] = np.random.uniform(0, 0.1, N)  # R ≈ 1
+
+    if return_timeseries:
+        t_array = np.linspace(0, t_max, steps)
+        R_array = np.empty(steps)
 
     for step in range(steps):
         current_theta = history[-1]
@@ -42,7 +46,13 @@ def simulate_delayed_kuramoto(N, omega_0, epsilon, tau, dt, t_max, init_state="r
         history[:-1] = history[1:]
         history[-1] = next_theta
 
+        if return_timeseries:
+            R_array[step] = np.abs(np.mean(np.exp(1j * next_theta)))
+
     # Final order parameter R
     final_theta = history[-1]
     R = np.abs(np.mean(np.exp(1j * final_theta)))
+
+    if return_timeseries:
+        return R, t_array, R_array
     return R
